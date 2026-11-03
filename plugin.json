@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "id": "ServerRemember",
+  "name": "Server Remember",
+  "guid": "jordan.valheim.serverremember",
+  "version": "0.1.0",
+  "author": "Glutoblop",
+  "description": "Remembers the last password that got you into each server (encrypted on disk) and adds a button to the server password prompt to fill it in.",
+  "repo": "Glutoblop/ServerRemember",
+  "branch": "main",
+  "client_only": true,
+  "files": ["dist/ServerRemember.dll"],
+  "install_dir": "BepInEx/plugins/ServerRemember",
+  "requires": {
+    "BepInExPack_Valheim": "5.4.2360"
+  },
+  "valheim": {
+    "version": "1.0.21",
+    "network_version": 41,
+    "steam_build": 26249040,
+    "last_tested": "2026-11-03"
+  },
+  "changelog": {
+    "0.1.0": "Initial release: per-server saved password, 'Use saved password' button on the password prompt."
+  }
+}

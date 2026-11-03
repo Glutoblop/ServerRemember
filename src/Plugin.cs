@@ -1,0 +1,59 @@
+using BepInEx;
+using BepInEx.Configuration;
+using HarmonyLib;
+using UnityEngine;
+
+namespace ServerRemember
+{
+    // Client-only. Vanilla flow when joining a password-protected server:
+    //   FejdStartup.JoinServer()           -> m_joinServer identifies the server we're joining
+    //   ZNet.RPC_ClientHandshake(needPw)   -> shows ZNet.m_passwordDialog with a GuiInputField
+    //   ZNet.OnPasswordEntered(pwd)        -> sends the salted hash to the server
+    //   ZNet.RPC_PeerInfo (client side)    -> m_connectionStatus = Connected (password accepted)
+    // We remember the typed password, and only store it (encrypted, per server) once RPC_PeerInfo
+    // marks the connection as Connected. Nothing is sent to the server beyond what vanilla sends.
+    [BepInPlugin(Guid, Name, Version)]
+    [BepInProcess("valheim.exe")]
+    public class Plugin : BaseUnityPlugin
+    {
+        public const string Guid = "jordan.valheim.serverremember";
+        public const string Name = "Server Remember";
+        public const string Version = "0.1.0";
+
+        internal static Plugin Instance;
+        internal static ConfigEntry<bool> Enabled;
+        internal static ConfigEntry<bool> AutoSubmit;
+        internal static ConfigEntry<string> ButtonText;
+        internal static ConfigEntry<float> ButtonOffsetY;
+
+        private Harmony _harmony;
+
+        private void Awake()
+        {
+            Instance = this;
+
+            Enabled = Config.Bind("General", "Enabled", true,
+                "Remember the last password that successfully got you into each server, and show a button to re-enter it.");
+            AutoSubmit = Config.Bind("General", "AutoSubmit", false,
+                "If true, clicking the button also submits the password. If false it is only typed into the box.");
+            ButtonText = Config.Bind("Layout", "ButtonText", "Use saved password",
+                "Text shown on the button in the password dialog.");
+            ButtonOffsetY = Config.Bind("Layout", "ButtonOffsetY", 12f,
+                "Gap in pixels between the password box and the button below it.");
+
+            PasswordStore.Load();
+
+            _harmony = new Harmony(Guid);
+            _harmony.PatchAll(typeof(Plugin).Assembly);
+        }
+
+        private void OnDestroy()
+        {
+            _harmony?.UnpatchSelf();
+            PasswordButton.Destroy();
+        }
+
+        internal static void Log(string msg) => Instance?.Logger.LogInfo(msg);
+        internal static void Warn(string msg) => Instance?.Logger.LogWarning(msg);
+    }
+}

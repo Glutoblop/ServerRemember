@@ -4,13 +4,13 @@
 
 A BepInEx plugin for Valheim.
 
-Stop retyping server passwords. Server Remember saves the last password that successfully got you into each server, and when the password prompt appears it adds a **Use saved password** button that fills it in for you.
+Stop retyping server passwords. Server Remember saves the last password that successfully got you into each server, and adds a small key button to the right of the password prompt that fills it in for you.
 
 ## Features
 - Saves a password only after the server accepts it, so typos are never remembered.
 - Per server: dedicated servers by address and port, Steam/PlayFab hosts by their id.
-- Button only shows when there's a saved password for the server you're joining.
-- Optional auto-submit when you click the button.
+- The key button is always there; it's greyed out until you have a saved password.
+- Falls back to the last password that worked anywhere if this server has none saved.
 - Client-side only: works on vanilla servers. Nothing extra is sent to the server.
 
 ## How passwords are stored
@@ -25,9 +25,7 @@ They live in `BepInEx/config/jordan.valheim.serverremember.passwords`. Delete th
 | Section | Key | Default | What it does |
 |---|---|---|---|
 | General | Enabled | true | Save passwords and show the button. |
-| General | AutoSubmit | false | Clicking the button also submits the password. |
-| Layout | ButtonText | Use saved password | Button label. |
-| Layout | ButtonOffsetY | 12 | Gap between the password box and the button. |
+| Layout | ButtonGap | 6 | Gap between the password box and the key button. |
 
 ## Install
 

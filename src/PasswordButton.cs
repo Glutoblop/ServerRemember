@@ -1,36 +1,34 @@
+using System.Linq;
 using GUIFramework;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace ServerRemember
 {
-    // Adds a "Use saved password" button under the GuiInputField in ZNet.m_passwordDialog.
-    // We clone an existing game button so it matches the menu style, then strip its localization
-    // and click handlers.
+    // A small square key button pinned to the right of the GuiInputField in ZNet.m_passwordDialog.
+    // Always shown while the prompt is open; disabled when there's no saved password to use.
+    // Uses the game's own sprites: "key_icon" (gold key) on "key_base" (square button frame). Both live in
+    // the same GUI bundle as the password panel art ("woodpanel_password"), so they're loaded at this point.
     internal static class PasswordButton
     {
+        private const string IconSprite = "key_icon";
+        private const string FrameSprite = "key_base";
+
         private static Button _button;
-        private static TMP_Text _label;
+        private static Image _icon;
         private static GuiInputField _input;
 
         internal static void Show(ZNet znet, bool hasSaved)
         {
-            if (!hasSaved)
-            {
-                Hide();
-                return;
-            }
-
             _input = znet.m_passwordDialog.GetComponentInChildren<GuiInputField>(true);
             if (_input == null) return;
 
-            if (_button == null || _button.transform.parent != _input.transform.parent)
-                Create(znet.m_passwordDialog);
-            if (_button == null) return;
+            if (_button == null || _button.transform.parent != _input.transform)
+                Create();
 
             Layout();
-            if (_label != null) _label.text = Plugin.ButtonText.Value;
+            _button.interactable = hasSaved;
+            _icon.color = hasSaved ? Color.white : new Color(1f, 1f, 1f, 0.3f);
             _button.gameObject.SetActive(true);
         }
 
@@ -43,110 +41,89 @@ namespace ServerRemember
         {
             if (_button != null) Object.Destroy(_button.gameObject);
             _button = null;
-            _label = null;
+            _icon = null;
         }
 
-        private static Button FindTemplate(RectTransform dialog)
+        private static Sprite FindSprite(string name)
         {
-            foreach (var b in dialog.GetComponentsInChildren<Button>(true))
-                if (b.GetComponentInChildren<TMP_Text>(true) != null) return b;
+            var loaded = Resources.FindObjectsOfTypeAll<Sprite>().FirstOrDefault(s => s.name == name);
+            if (loaded != null) return loaded;
 
-            var fejd = FejdStartup.instance;
-            if (fejd != null)
-                foreach (var b in fejd.GetComponentsInChildren<Button>(true))
-                    if (b.GetComponentInChildren<TMP_Text>(true) != null) return b;
+            // Not instantiated yet: pull it straight from whichever loaded bundle has it.
+            foreach (var bundle in AssetBundle.GetAllLoadedAssetBundles())
+            {
+                if (bundle == null || bundle.isStreamedSceneAssetBundle) continue;
+                foreach (var path in bundle.GetAllAssetNames())
+                {
+                    if (System.IO.Path.GetFileNameWithoutExtension(path) != name) continue;
+                    var sprite = bundle.LoadAsset<Sprite>(path);
+                    if (sprite != null) return sprite;
+                }
+            }
 
+            Plugin.Warn("Sprite '" + name + "' not found");
             return null;
         }
 
-        private static void Create(RectTransform dialog)
+        private static void Create()
         {
             Destroy();
 
-            var template = FindTemplate(dialog);
-            GameObject go;
-            if (template != null)
-            {
-                go = Object.Instantiate(template.gameObject, _input.transform.parent, false);
-                // Strip anything that would rewrite the text or react to gamepad hints.
-                foreach (var mb in go.GetComponentsInChildren<MonoBehaviour>(true))
-                {
-                    string n = mb.GetType().Name;
-                    if (n == "Localize" || n == "UIGamePad") Object.DestroyImmediate(mb);
-                }
-                _button = go.GetComponent<Button>();
-                _button.onClick = new Button.ButtonClickedEvent();
-                _label = go.GetComponentInChildren<TMP_Text>(true);
-            }
-            else
-            {
-                go = BuildPlain();
-            }
+            var go = new GameObject("ServerRemember_KeyButton", typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement));
+            go.transform.SetParent(_input.transform, false);
+            go.GetComponent<LayoutElement>().ignoreLayout = true;
 
-            go.name = "ServerRemember_UseSavedPassword";
-            var le = go.GetComponent<LayoutElement>() ?? go.AddComponent<LayoutElement>();
-            le.ignoreLayout = true;
-            _button.onClick.AddListener(OnClick);
-        }
+            var frame = go.GetComponent<Image>();
+            frame.sprite = FindSprite(FrameSprite);
+            frame.type = Image.Type.Sliced;
+            if (frame.sprite == null) frame.color = new Color(0.15f, 0.12f, 0.1f, 0.9f);
 
-        private static GameObject BuildPlain()
-        {
-            var go = new GameObject("ServerRemember_UseSavedPassword", typeof(RectTransform), typeof(Image), typeof(Button));
-            go.transform.SetParent(_input.transform.parent, false);
-            go.GetComponent<Image>().color = new Color(0.25f, 0.2f, 0.15f, 0.9f);
             _button = go.GetComponent<Button>();
+            _button.targetGraphic = frame;
+            var colors = _button.colors;
+            colors.normalColor = Color.white;
+            colors.highlightedColor = new Color(1f, 0.85f, 0.6f);
+            colors.pressedColor = new Color(0.8f, 0.65f, 0.4f);
+            colors.disabledColor = new Color(0.6f, 0.6f, 0.6f, 0.6f);
+            _button.colors = colors;
+            _button.navigation = new Navigation { mode = Navigation.Mode.None };
+            _button.onClick.AddListener(OnClick);
 
-            var textGo = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
-            textGo.transform.SetParent(go.transform, false);
-            var rt = (RectTransform)textGo.transform;
-            rt.anchorMin = Vector2.zero;
-            rt.anchorMax = Vector2.one;
-            rt.offsetMin = rt.offsetMax = Vector2.zero;
-            var tmp = textGo.GetComponent<TextMeshProUGUI>();
-            if (_input.textComponent != null) tmp.font = _input.textComponent.font;
-            tmp.fontSize = 18;
-            tmp.alignment = TextAlignmentOptions.Center;
-            tmp.color = new Color(1f, 0.85f, 0.6f);
-            _label = tmp;
-            return go;
+            var iconGo = new GameObject("Icon", typeof(RectTransform), typeof(Image));
+            iconGo.transform.SetParent(go.transform, false);
+            var iconRt = (RectTransform)iconGo.transform;
+            iconRt.anchorMin = Vector2.zero;
+            iconRt.anchorMax = Vector2.one;
+            iconRt.offsetMin = new Vector2(5f, 5f);
+            iconRt.offsetMax = new Vector2(-5f, -5f);
+            _icon = iconGo.GetComponent<Image>();
+            _icon.sprite = FindSprite(IconSprite);
+            _icon.preserveAspect = true;
+            _icon.raycastTarget = false;
         }
 
         private static void Layout()
         {
             var inputRt = (RectTransform)_input.transform;
             var rt = (RectTransform)_button.transform;
-            rt.anchorMin = inputRt.anchorMin;
-            rt.anchorMax = inputRt.anchorMax;
-            rt.pivot = inputRt.pivot;
-
-            float height = Mathf.Max(30f, inputRt.rect.height);
-            // Same width and horizontal placement as the input field, directly below it.
-            rt.sizeDelta = new Vector2(inputRt.sizeDelta.x, height);
-            rt.anchoredPosition = inputRt.anchoredPosition +
-                                  new Vector2(0f, -(inputRt.rect.height * inputRt.pivot.y + Plugin.ButtonOffsetY.Value + height * (1f - inputRt.pivot.y)));
+            float size = Mathf.Clamp(inputRt.rect.height, 24f, 48f);
+            rt.anchorMin = rt.anchorMax = new Vector2(1f, 0.5f);
+            rt.pivot = new Vector2(0f, 0.5f);
+            rt.sizeDelta = new Vector2(size, size);
+            rt.anchoredPosition = new Vector2(Plugin.ButtonGap.Value, 0f);
             rt.SetAsLastSibling();
         }
 
         private static void OnClick()
         {
-            if (_input == null || Session.ServerKey == null) return;
-            string pwd = PasswordStore.Get(Session.ServerKey);
-            if (string.IsNullOrEmpty(pwd))
-            {
-                Hide();
-                return;
-            }
+            string key = Session.LookupKey();
+            if (_input == null || key == null) return;
+            string pwd = PasswordStore.Get(key);
+            if (string.IsNullOrEmpty(pwd)) return;
 
             _input.text = pwd;
-            if (Plugin.AutoSubmit.Value)
-            {
-                _input.OnInputSubmit?.Invoke(pwd);
-            }
-            else
-            {
-                _input.ActivateInputField();
-                _input.caretPosition = pwd.Length;
-            }
+            _input.ActivateInputField();
+            _input.caretPosition = pwd.Length;
         }
     }
 }

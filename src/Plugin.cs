@@ -22,9 +22,7 @@ namespace ServerRemember
 
         internal static Plugin Instance;
         internal static ConfigEntry<bool> Enabled;
-        internal static ConfigEntry<bool> AutoSubmit;
-        internal static ConfigEntry<string> ButtonText;
-        internal static ConfigEntry<float> ButtonOffsetY;
+        internal static ConfigEntry<float> ButtonGap;
 
         private Harmony _harmony;
 
@@ -34,12 +32,8 @@ namespace ServerRemember
 
             Enabled = Config.Bind("General", "Enabled", true,
                 "Remember the last password that successfully got you into each server, and show a button to re-enter it.");
-            AutoSubmit = Config.Bind("General", "AutoSubmit", false,
-                "If true, clicking the button also submits the password. If false it is only typed into the box.");
-            ButtonText = Config.Bind("Layout", "ButtonText", "Use saved password",
-                "Text shown on the button in the password dialog.");
-            ButtonOffsetY = Config.Bind("Layout", "ButtonOffsetY", 12f,
-                "Gap in pixels between the password box and the button below it.");
+            ButtonGap = Config.Bind("Layout", "ButtonGap", 6f,
+                "Gap in pixels between the right edge of the password box and the key button.");
 
             PasswordStore.Load();
 

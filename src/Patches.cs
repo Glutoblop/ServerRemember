@@ -10,6 +10,16 @@ namespace ServerRemember
         /// <summary>Password typed into the dialog this connection attempt; saved only once accepted.</summary>
         internal static string PendingPassword;
 
+        /// <summary>Fallback entry: the last password that worked on any server.</summary>
+        internal const string LastKey = "LastUsed";
+
+        /// <summary>The saved entry to use for this server: its own, else the last-used one.</summary>
+        internal static string LookupKey()
+        {
+            if (ServerKey != null && PasswordStore.Has(ServerKey)) return ServerKey;
+            return PasswordStore.Has(LastKey) ? LastKey : null;
+        }
+
         internal static string KeyFor(ServerJoinData data)
         {
             if (!data.IsValid) return null;
@@ -32,10 +42,12 @@ namespace ServerRemember
     {
         private static void Postfix(ZNet __instance, bool needPassword)
         {
-            if (!Plugin.Enabled.Value || !needPassword) return;
+            if (!needPassword) return;
+            if (!Plugin.Enabled.Value) { PasswordButton.Hide(); return; }
             if (__instance.m_passwordDialog == null || !__instance.m_passwordDialog.gameObject.activeSelf) return;
 
-            bool hasSaved = Session.ServerKey != null && PasswordStore.Has(Session.ServerKey);
+            bool hasSaved = Session.LookupKey() != null;
+            Plugin.Log($"Password prompt for {Session.ServerKey ?? "<unknown server>"}, saved password: {hasSaved}");
             PasswordButton.Show(__instance, hasSaved);
         }
     }
@@ -61,10 +73,11 @@ namespace ServerRemember
             if (ZNet.m_isServer ||Session.PendingPassword == null) return;
             if (ZNet.m_connectionStatus != ZNet.ConnectionStatus.Connected) return;
 
-            if (Plugin.Enabled.Value && Session.ServerKey != null)
+            if (Plugin.Enabled.Value)
             {
-                PasswordStore.Set(Session.ServerKey, Session.PendingPassword);
-                Plugin.Log("Saved password for " + Session.ServerKey);
+                if (Session.ServerKey != null) PasswordStore.Set(Session.ServerKey, Session.PendingPassword);
+                PasswordStore.Set(Session.LastKey, Session.PendingPassword);
+                Plugin.Log("Saved password for " + (Session.ServerKey ?? "<unknown server>"));
             }
             Session.PendingPassword = null;
         }

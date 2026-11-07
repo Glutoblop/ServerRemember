@@ -23,6 +23,8 @@ namespace ServerRemember
         internal static Plugin Instance;
         internal static ConfigEntry<bool> Enabled;
         internal static ConfigEntry<float> ButtonGap;
+        internal static ConfigEntry<bool> ReconnectEnabled;
+        internal static ConfigEntry<float> ReconnectGap;
 
         private Harmony _harmony;
 
@@ -34,6 +36,10 @@ namespace ServerRemember
                 "Remember the last password that successfully got you into each server, and show a button to re-enter it.");
             ButtonGap = Config.Bind("Layout", "ButtonGap", 6f,
                 "Gap in pixels between the right edge of the password box and the key button.");
+            ReconnectEnabled = Config.Bind("Reconnect", "Enabled", true,
+                "Show a Reconnect button at the top of the main menu that joins the last server you played on with the selected character.");
+            ReconnectGap = Config.Bind("Reconnect", "Gap", 8f,
+                "Gap in pixels between the Reconnect text, the character icon and the character name.");
 
             PasswordStore.Load();
 

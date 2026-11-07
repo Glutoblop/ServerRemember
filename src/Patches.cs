@@ -34,6 +34,7 @@ namespace ServerRemember
         {
             Session.ServerKey = Session.KeyFor(__instance.m_joinServer);
             Session.PendingPassword = null;
+            MainMenuReconnect.RememberName(__instance.m_joinServer);
         }
     }
 

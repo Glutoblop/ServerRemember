@@ -18,7 +18,7 @@ namespace ServerRemember
     {
         public const string Guid = "jordan.valheim.serverremember";
         public const string Name = "Server Remember";
-        public const string Version = "0.1.3";
+        public const string Version = "0.1.4";
 
         internal static Plugin Instance;
         internal static ConfigEntry<bool> Enabled;

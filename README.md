@@ -11,7 +11,7 @@ Stop retyping server passwords. Server Remember saves the last password that suc
 - Per server: dedicated servers by address and port, Steam/PlayFab hosts by their id.
 - The key button is always there; it's greyed out until you have a saved password.
 - Falls back to the last password that worked anywhere if this server has none saved.
-- **Reconnect** at the top of the main menu: `Reconnect: <server> [icon] <character>`. One click joins the last server you played on (the top of the vanilla Recent list) with the character shown, which is the one selected on the character screen. The password prompt still appears as normal, with the saved-password button.
+- **Reconnect** at the top of the main menu: `<server> [icon] <character>`. One click joins the last server you played on (the top of the vanilla Recent list) with the character shown, which is the one selected on the character screen. The password prompt still appears as normal, with the saved-password button.
 - Client-side only: works on vanilla servers. Nothing extra is sent to the server.
 
 ## How passwords are stored

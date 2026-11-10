@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace ServerRemember
 {
-    // "Reconnect: <server> [icon] <character>" at the top of the main menu (FejdStartup.m_menuList).
+    // "<server> [icon] <character>" at the top of the main menu (FejdStartup.m_menuList).
     //   Server:    first entry of the vanilla Recent list (recent servers file, ServerListGui.GetServerListLocations),
     //              which FejdStartup.JoinServer updates on every join. Its display name is remembered by us when
     //              joining, since the list itself only stores addresses/ids.
@@ -208,7 +208,7 @@ namespace ServerRemember
 
             UpdateServerName();
             _label.text = !_server.IsValid ? "Reconnect"
-                        : "Reconnect: " + (_serverName ?? "last server");
+                        : _serverName ?? "Last server";
             _charName.text = profile != null ? profile.GetName() : "";
             Layout(profile != null);
 

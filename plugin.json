@@ -3,7 +3,7 @@
   "id": "ServerRemember",
   "name": "Server Remember",
   "guid": "jordan.valheim.serverremember",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "author": "Glutoblop",
   "description": "Remembers the last password that got you into each server (encrypted on disk) and adds a button to the server password prompt to fill it in.",
   "repo": "Glutoblop/ServerRemember",
@@ -21,6 +21,7 @@
     "last_tested": "2026-11-03"
   },
   "changelog": {
+    "0.1.5": "Removed the Reconnect prefix from the main menu server label.",
     "0.1.4": "Mod Settings button in the pause menu: change this plugin's settings in game (one tab per plugin).",
     "0.1.3": "Main menu Reconnect option: last server's name, selected character and its icon",
     "0.1.2": "Key icon button to the right of the password box; always shown, greyed out when nothing is saved. Falls back to the last password used.",
